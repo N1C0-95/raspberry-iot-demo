@@ -1,0 +1,169 @@
+### Test RaspberryIoT API Endpoints
+
+@baseUrl = http://localhost:5193
+@sensorId = RASPBERRY-DEMO-001
+
+### 1. Health Check - Get All Statuses
+GET {{baseUrl}}/api/sensor/status
+
+###
+
+### 2. Poll for New Statuses (Power Platform)
+GET {{baseUrl}}/api/sensor/status/poll?sinceRowId=0
+
+###
+
+### 3. Force Error
+POST {{baseUrl}}/api/sensor/error
+Content-Type: application/json
+
+{
+  "sensorId": "{{sensorId}}",
+  "triggeredBy": "test_manual"
+}
+
+###
+
+### 4. Force Reboot
+POST {{baseUrl}}/api/sensor/reboot
+Content-Type: application/json
+
+{
+  "sensorId": "{{sensorId}}",
+  "triggeredBy": "test_manual"
+}
+
+###
+
+### 5. Get Current Status by SensorId
+GET {{baseUrl}}/api/sensor/status/current/{{sensorId}}
+
+###
+
+### 6. Get All Events
+GET {{baseUrl}}/api/sensor/events
+
+###
+
+### 7. Poll for New Events
+GET {{baseUrl}}/api/sensor/events/poll?sinceRowId=0
+
+###
+
+### 8. Create Event - Error Detected
+POST {{baseUrl}}/api/sensor/events
+Content-Type: application/json
+
+{
+  "eventType": "ErrorDetected",
+  "status": "Error",
+  "triggeredBy": "test_manual"
+}
+
+###
+
+### 9. Create Event - Reboot Started
+POST {{baseUrl}}/api/sensor/events
+Content-Type: application/json
+
+{
+  "eventType": "RebootStarted",
+  "status": "Rebooting",
+  "triggeredBy": "test_manual"
+}
+
+###
+
+### 10. Create Event - Reboot Completed
+POST {{baseUrl}}/api/sensor/events
+Content-Type: application/json
+
+{
+  "eventType": "RebootCompleted",
+  "status": "Online",
+  "triggeredBy": "worker"
+}
+
+###
+
+### 11. Get Events with Filter
+GET {{baseUrl}}/api/sensor/events?eventType=ErrorDetected
+
+###
+
+### 12. Update Status (requires existing ID)
+# First create a status, then use the returned ID
+PUT {{baseUrl}}/api/sensor/status/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "sensorId": "{{sensorId}}",
+  "status": "Online",
+  "ledColor": "Green",
+  "changedOn": "test_manual"
+}
+
+###
+
+### Test Flow - Complete Scenario
+
+### Step 1: Create initial error
+POST {{baseUrl}}/api/sensor/error
+Content-Type: application/json
+
+{
+  "sensorId": "{{sensorId}}",
+  "triggeredBy": "worker"
+}
+
+###
+
+### Step 2: Create error event
+POST {{baseUrl}}/api/sensor/events
+Content-Type: application/json
+
+{
+  "eventType": "ErrorDetected",
+  "status": "Error",
+  "triggeredBy": "worker"
+}
+
+###
+
+### Step 3: Check polling (should return the error)
+GET {{baseUrl}}/api/sensor/status/poll?sinceRowId=0
+
+###
+
+### Step 4: Force reboot
+POST {{baseUrl}}/api/sensor/reboot
+Content-Type: application/json
+
+{
+  "sensorId": "{{sensorId}}",
+  "triggeredBy": "power_automate"
+}
+
+###
+
+### Step 5: Create reboot event
+POST {{baseUrl}}/api/sensor/events
+Content-Type: application/json
+
+{
+  "eventType": "RebootStarted",
+  "status": "Rebooting",
+  "triggeredBy": "power_automate"
+}
+
+###
+
+### Step 6: Check current status
+GET {{baseUrl}}/api/sensor/status/current/{{sensorId}}
+
+###
+
+### Step 7: Poll again (should return new records)
+GET {{baseUrl}}/api/sensor/status/poll?sinceRowId=1
+
+###

@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# 
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Api", "RaspberryIoT.Api\RaspberryIoT.Api.csproj", "{53EB5A4E-6804-4710-AE0D-FFA99588EA12}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Contracts", "RaspberryIoT.Contracts\RaspberryIoT.Contracts.csproj", "{C1F0740F-2684-4861-96C9-6B3EFAE7110C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Application", "RaspberryIoT.Application\RaspberryIoT.Application.csproj", "{6D118F79-433E-401C-98B8-DA375482363B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Infrastructure", "RaspberryIoT.Infrastructure\RaspberryIoT.Infrastructure.csproj", "{96A9A981-0C6C-48CA-8830-74ED8E4B4885}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{53EB5A4E-6804-4710-AE0D-FFA99588EA12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53EB5A4E-6804-4710-AE0D-FFA99588EA12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53EB5A4E-6804-4710-AE0D-FFA99588EA12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53EB5A4E-6804-4710-AE0D-FFA99588EA12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1F0740F-2684-4861-96C9-6B3EFAE7110C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1F0740F-2684-4861-96C9-6B3EFAE7110C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1F0740F-2684-4861-96C9-6B3EFAE7110C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1F0740F-2684-4861-96C9-6B3EFAE7110C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6D118F79-433E-401C-98B8-DA375482363B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6D118F79-433E-401C-98B8-DA375482363B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6D118F79-433E-401C-98B8-DA375482363B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6D118F79-433E-401C-98B8-DA375482363B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

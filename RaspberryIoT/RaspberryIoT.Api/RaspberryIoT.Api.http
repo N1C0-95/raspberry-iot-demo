@@ -1,0 +1,6 @@
+@RaspberryIoT.Api_HostAddress = http://localhost:5193
+
+GET {{RaspberryIoT.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
