@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Application", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Infrastructure", "RaspberryIoT.Infrastructure\RaspberryIoT.Infrastructure.csproj", "{96A9A981-0C6C-48CA-8830-74ED8E4B4885}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaspberryIoT.Worker", "RaspberryIoT.Worker\RaspberryIoT.Worker.csproj", "{25EF9B8B-35B6-4497-B2D2-CF6B5BE271C5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -31,5 +33,9 @@ Global
 		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{96A9A981-0C6C-48CA-8830-74ED8E4B4885}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25EF9B8B-35B6-4497-B2D2-CF6B5BE271C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25EF9B8B-35B6-4497-B2D2-CF6B5BE271C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25EF9B8B-35B6-4497-B2D2-CF6B5BE271C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25EF9B8B-35B6-4497-B2D2-CF6B5BE271C5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -3,13 +3,9 @@ using RaspberryIoT.Application.Repositories;
 using RaspberryIoT.Application.Services;
 using RaspberryIoT.Infrastructure.Database;
 using RaspberryIoT.Infrastructure.Repositories;
+using RaspberryIoT.Worker;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+var builder = Host.CreateApplicationBuilder(args);
 
 // Database Configuration
 var connectionString = builder.Configuration.GetValue<string>("Database:ConnectionString")!;
@@ -20,28 +16,16 @@ builder.Services.AddSingleton<IDbInitializer, DbInitializer>();
 builder.Services.AddSingleton<ISensorStatusRepository, SensorStatusRepository>();
 builder.Services.AddSingleton<ISensorEventRepository, SensorEventRepository>();
 
-// Services
-builder.Services.AddSingleton<ISensorStatusService, SensorStatusService>();
-builder.Services.AddSingleton<ISensorEventService, SensorEventService>();
-
 // Orchestrator
 builder.Services.AddSingleton<ISensorOrchestrator, SensorOrchestrator>();
 
-var app = builder.Build();
+// Worker Service
+builder.Services.AddHostedService<Worker>();
+
+var host = builder.Build();
 
 // Initialize Database
-var dbInitializer = app.Services.GetRequiredService<IDbInitializer>();
+var dbInitializer = host.Services.GetRequiredService<IDbInitializer>();
 await dbInitializer.InitializeAsync();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.MapControllers();
-
-app.Run();
+host.Run();

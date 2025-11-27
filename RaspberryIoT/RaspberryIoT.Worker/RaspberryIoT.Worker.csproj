@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-RaspberryIoT.Worker-a854e6a4-c244-4e80-8a35-2b522c7727e0</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RaspberryIoT.Application\RaspberryIoT.Application.csproj" />
+    <ProjectReference Include="..\RaspberryIoT.Infrastructure\RaspberryIoT.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

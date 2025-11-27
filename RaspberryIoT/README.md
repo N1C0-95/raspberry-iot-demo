@@ -51,7 +51,7 @@ RaspberryIoT.sln
 │
 ├── RaspberryIoT.Application/        # Business Logic Layer
 │   ├── Models/                      # Entities + Enums
-│   ├── Services/                    # Services (interfacce + impl)
+│   ├── Services/                    # Services + Orchestrator
 │   ├── Repositories/                # Repository interfaces
 │   └── Database/                    # Database interfaces
 │
@@ -59,8 +59,13 @@ RaspberryIoT.sln
 │   ├── Repositories/                # Repository implementations (Dapper)
 │   └── Database/                    # DbConnectionFactory + DbInitializer
 │
-└── RaspberryIoT.Api/                # Web API
-    └── Controllers/                 # API Controllers
+├── RaspberryIoT.Api/                # Web API
+│   └── Controllers/                 # API Controllers
+│
+└── RaspberryIoT.Worker/             # ⭐ Background Service (GPIO Monitor)
+    ├── Worker.cs                    # Background Service
+    ├── Program.cs                   # DI Configuration
+    └── appsettings.json             # Worker Config
 ```
 
 ### Dipendenze Progetti
@@ -69,6 +74,17 @@ RaspberryIoT.sln
 - **Application**: → **Contracts**
 - **Infrastructure**: → **Application** (transitivamente anche Contracts)
 - **Api**: → **Application**, **Infrastructure**, **Contracts**
+- **Worker**: → **Application**, **Infrastructure** ⭐
+
+### 🎯 SensorOrchestrator
+
+Coordinatore per operazioni complesse (usato dal Worker):
+
+```csharp
+ISensorOrchestrator
+  ├── HandleErrorDetectedAsync()    // Crea Status + Event atomicamente
+  └── HandleRebootStartedAsync()    // Crea Status + Event atomicamente
+```
 
 ## 🗄️ Database Schema (SQLite)
 
@@ -392,41 +408,89 @@ GET /api/sensor/status/poll?sinceRowId={lastRowId}
 
 ---
 
-## 🛠️ Prossimi Passi
+## 🤖 RaspberryIoT.Worker - Background Service
 
-### Worker Service (Futuro)
+### Descrizione
 
-Creare progetto `RaspberryIoT.Worker` per monitoraggio GPIO:
+Worker Service che monitora lo stato dei LED del Raspberry Pi (attualmente **simulato** per test, pronto per GPIO reali).
 
-```csharp
-public class GpioMonitorService : BackgroundService
+### Funzionalità
+
+- **Polling Periodico**: Monitora lo stato ogni 5 secondi (configurabile)
+- **Rilevamento Cambi Stato**: Rileva quando il LED passa da Green → Red → Off
+- **Scrittura Atomica**: Usa **SensorOrchestrator** per scrivere Status + Event coordinatamente
+- **Simulazione**: Genera stati casuali (80% Green, 15% Red, 5% Off) per test senza hardware
+
+### Esecuzione
+
+```bash
+cd RaspberryIoT.Worker
+dotnet run
+```
+
+### Configurazione (appsettings.json)
+
+```json
 {
-    private readonly ISensorStatusService _statusService;
-    
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            // Leggi GPIO
-            var ledState = ReadGpioPin(17);
-            
-            if (StateChanged(ledState))
-            {
-                // Scrivi su DB usando gli stessi service dell'API!
-                await _statusService.CreateAsync(new UpdateSensorStatusRequest
-                {
-                    SensorId = "RASPBERRY-DEMO-001",
-                    Status = MapToStatus(ledState),
-                    LedColor = ledState,
-                    ChangedOn = "worker"
-                });
-            }
-            
-            await Task.Delay(100, stoppingToken); // 100ms polling
-        }
-    }
+  "Database": {
+    "ConnectionString": "Data Source=sensor.db"
+  },
+  "Worker": {
+    "PollingIntervalMs": 5000,
+    "SensorId": "RASPBERRY-DEMO-001"
+  }
 }
 ```
+
+### Log di Esempio
+
+```
+info: RaspberryIoT.Worker.Worker[0]
+      Worker started - SensorId: RASPBERRY-DEMO-001, Polling: 5000ms
+info: RaspberryIoT.Worker.Worker[0]
+      Current state: Green
+info: RaspberryIoT.Worker.Worker[0]
+      State changed from Green to Red - calling orchestrator
+info: RaspberryIoT.Worker.Worker[0]
+      Orchestrator HandleErrorDetected completed successfully
+```
+
+### Integrazione GPIO Reale (Futuro)
+
+Sostituire il metodo `SimulateGpioRead()` con:
+
+```csharp
+using System.Device.Gpio;
+
+private LedColor ReadRealGpio()
+{
+    // Pin 17 per LED Green, Pin 27 per LED Red
+    bool greenOn = _gpioController.Read(17) == PinValue.High;
+    bool redOn = _gpioController.Read(27) == PinValue.High;
+    
+    if (greenOn) return LedColor.Green;
+    if (redOn) return LedColor.Red;
+    return LedColor.Off;
+}
+```
+
+### Architettura
+
+- **Worker.cs**: Background Service con loop di monitoraggio
+- **SensorOrchestrator**: Gestisce scrittura coordinata SensorStatus + SensorEvent
+- **Dependency Injection**: Condivide gli stessi Services/Repositories dell'API
+- **Database Condiviso**: Worker e API scrivono sullo stesso `sensor.db`
+
+---
+
+## 🛠️ Prossimi Passi
+
+1. **Deploy su Raspberry Pi**: Copiare tutto il progetto
+2. **Installare ngrok**: Esporre API pubblica per Power Platform
+3. **Avviare Worker + API**: Due processi separati, stesso database
+4. **Configurare systemd**: Auto-start al boot del Raspberry Pi
+5. **Sostituire GPIO Simulation**: Implementare lettura reale pin GPIO
+6. **Testare Polling Power Platform**: Verificare chiamate `/api/sensorstatus/poll` e `/api/sensorevents/poll`
 
 ---
 
