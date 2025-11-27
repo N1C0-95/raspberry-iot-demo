@@ -1,0 +1,1023 @@
+{
+	"info": {
+		"_postman_id": "raspberry-iot-demo-collection",
+		"name": "RaspberryIoT API Collection",
+		"description": "Collection completa per testare le API del progetto RaspberryIoT - Demo Conferenza",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "SensorStatus",
+			"item": [
+				{
+					"name": "Get All Statuses",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/status",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"status"
+							]
+						},
+						"description": "Ottiene tutti gli stati del sensore ordinati per RowId DESC"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Status by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/status/{{statusId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"status",
+								"{{statusId}}"
+							]
+						},
+						"description": "Ottiene un singolo stato per GUID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current Status by SensorId",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/status/current/{{sensorId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"status",
+								"current",
+								"{{sensorId}}"
+							]
+						},
+						"description": "Ottiene lo stato corrente (più recente) per un sensorId specifico"
+					},
+					"response": []
+				},
+				{
+					"name": "Poll for New Statuses (Power Platform)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/status/poll?sinceRowId=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"status",
+								"poll"
+							],
+							"query": [
+								{
+									"key": "sinceRowId",
+									"value": "0",
+									"description": "Ultimo RowId processato (0 per tutti i record)"
+								}
+							]
+						},
+						"description": "Endpoint per Power Platform Custom Connector polling. Ritorna solo record con RowId > sinceRowId"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Status",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"status\": \"Online\",\n  \"ledColor\": \"Green\",\n  \"changedOn\": \"api_manual\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/status/{{statusId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"status",
+								"{{statusId}}"
+							]
+						},
+						"description": "Aggiorna uno stato esistente"
+					},
+					"response": []
+				},
+				{
+					"name": "Force Error",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"statusId\", jsonData.id);",
+									"    pm.environment.set(\"lastRowId\", jsonData.rowId);",
+									"    console.log(\"Saved statusId: \" + jsonData.id);",
+									"    console.log(\"Saved lastRowId: \" + jsonData.rowId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"triggeredBy\": \"postman_test\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/error",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"error"
+							]
+						},
+						"description": "Forza uno stato di Error (Status=Error, LedColor=Red)"
+					},
+					"response": []
+				},
+				{
+					"name": "Force Reboot",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"statusId\", jsonData.id);",
+									"    pm.environment.set(\"lastRowId\", jsonData.rowId);",
+									"    console.log(\"Saved statusId: \" + jsonData.id);",
+									"    console.log(\"Saved lastRowId: \" + jsonData.rowId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"triggeredBy\": \"postman_test\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/reboot",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"reboot"
+							]
+						},
+						"description": "Forza uno stato di Reboot (Status=Rebooting, LedColor=Off)"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints per la gestione degli stati del sensore"
+		},
+		{
+			"name": "SensorEvents",
+			"item": [
+				{
+					"name": "Get All Events",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events"
+							]
+						},
+						"description": "Ottiene tutti gli eventi ordinati per RowId DESC"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Events with Filter",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events?eventType=ErrorDetected",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events"
+							],
+							"query": [
+								{
+									"key": "eventType",
+									"value": "ErrorDetected",
+									"description": "Valori possibili: ErrorDetected, RebootStarted, RebootCompleted"
+								}
+							]
+						},
+						"description": "Ottiene eventi filtrati per tipo"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Event by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events/{{eventId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events",
+								"{{eventId}}"
+							]
+						},
+						"description": "Ottiene un singolo evento per GUID"
+					},
+					"response": []
+				},
+				{
+					"name": "Poll for New Events (Power Platform)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events/poll?sinceRowId=0",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events",
+								"poll"
+							],
+							"query": [
+								{
+									"key": "sinceRowId",
+									"value": "0",
+									"description": "Ultimo RowId processato (0 per tutti i record)"
+								}
+							]
+						},
+						"description": "Endpoint per Power Platform Custom Connector polling. Ritorna solo eventi con RowId > sinceRowId"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Event - ErrorDetected",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"eventId\", jsonData.id);",
+									"    pm.environment.set(\"lastEventRowId\", jsonData.rowId);",
+									"    console.log(\"Saved eventId: \" + jsonData.id);",
+									"    console.log(\"Saved lastEventRowId: \" + jsonData.rowId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventType\": \"ErrorDetected\",\n  \"status\": \"Error\",\n  \"triggeredBy\": \"postman_test\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events"
+							]
+						},
+						"description": "Crea un evento di tipo ErrorDetected"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Event - RebootStarted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"eventId\", jsonData.id);",
+									"    pm.environment.set(\"lastEventRowId\", jsonData.rowId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventType\": \"RebootStarted\",\n  \"status\": \"Rebooting\",\n  \"triggeredBy\": \"postman_test\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events"
+							]
+						},
+						"description": "Crea un evento di tipo RebootStarted"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Event - RebootCompleted",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"eventId\", jsonData.id);",
+									"    pm.environment.set(\"lastEventRowId\", jsonData.rowId);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"eventType\": \"RebootCompleted\",\n  \"status\": \"Online\",\n  \"triggeredBy\": \"worker\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/sensor/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"sensor",
+								"events"
+							]
+						},
+						"description": "Crea un evento di tipo RebootCompleted"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints per la gestione degli eventi del sensore"
+		},
+		{
+			"name": "Test Scenarios",
+			"item": [
+				{
+					"name": "Scenario 1 - Error Detection Flow",
+					"item": [
+						{
+							"name": "Step 1: Force Error Status",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.test(\"Response has correct status\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.status).to.eql(\"Error\");",
+											"    pm.expect(jsonData.ledColor).to.eql(\"Red\");",
+											"    pm.environment.set(\"statusId\", jsonData.id);",
+											"    pm.environment.set(\"lastRowId\", jsonData.rowId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"triggeredBy\": \"worker\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/error",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"error"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 2: Create Error Event",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.test(\"Event created successfully\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.eventType).to.eql(\"ErrorDetected\");",
+											"    pm.environment.set(\"eventId\", jsonData.id);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"eventType\": \"ErrorDetected\",\n  \"status\": \"Error\",\n  \"triggeredBy\": \"worker\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 3: Verify Current Status",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Current status is Error\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.status).to.eql(\"Error\");",
+											"    pm.expect(jsonData.ledColor).to.eql(\"Red\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/status/current/{{sensorId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"status",
+										"current",
+										"{{sensorId}}"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 4: Check Polling (Should have new data)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 200\", function () {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"",
+											"pm.test(\"Polling returns data\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.be.an('array');",
+											"    pm.expect(jsonData.data.length).to.be.above(0);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/status/poll?sinceRowId=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"status",
+										"poll"
+									],
+									"query": [
+										{
+											"key": "sinceRowId",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Scenario completo di rilevamento errore: forza error, crea evento, verifica stato"
+				},
+				{
+					"name": "Scenario 2 - Reboot Flow",
+					"item": [
+						{
+							"name": "Step 1: Force Reboot",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status code is 201\", function () {",
+											"    pm.response.to.have.status(201);",
+											"});",
+											"",
+											"pm.test(\"Response has correct status\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.status).to.eql(\"Rebooting\");",
+											"    pm.expect(jsonData.ledColor).to.eql(\"Off\");",
+											"    pm.environment.set(\"lastRowId\", jsonData.rowId);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"triggeredBy\": \"power_automate\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/reboot",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"reboot"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 2: Create RebootStarted Event",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"eventType\": \"RebootStarted\",\n  \"status\": \"Rebooting\",\n  \"triggeredBy\": \"power_automate\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 3: Create RebootCompleted Event",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"eventType\": \"RebootCompleted\",\n  \"status\": \"Online\",\n  \"triggeredBy\": \"worker\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/events",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"events"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 4: Verify Events Polling",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Events polling returns data\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.be.an('array');",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/events/poll?sinceRowId=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"events",
+										"poll"
+									],
+									"query": [
+										{
+											"key": "sinceRowId",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Scenario completo di reboot: forza reboot, crea eventi, verifica polling"
+				},
+				{
+					"name": "Scenario 3 - Incremental Polling Test",
+					"item": [
+						{
+							"name": "Step 1: Get Initial State",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"if (jsonData.data && jsonData.data.length > 0) {",
+											"    var maxRowId = Math.max(...jsonData.data.map(item => item.rowId));",
+											"    pm.environment.set(\"lastRowId\", maxRowId);",
+											"    console.log(\"Set lastRowId to: \" + maxRowId);",
+											"} else {",
+											"    pm.environment.set(\"lastRowId\", 0);",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/status/poll?sinceRowId=0",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"status",
+										"poll"
+									],
+									"query": [
+										{
+											"key": "sinceRowId",
+											"value": "0"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 2: Create New Status",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"var jsonData = pm.response.json();",
+											"pm.environment.set(\"newRowId\", jsonData.rowId);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"sensorId\": \"{{sensorId}}\",\n  \"triggeredBy\": \"polling_test\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/error",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"error"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 3: Poll with Last RowId (Should Return New Data)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"New data detected\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.be.an('array');",
+											"    pm.expect(jsonData.data.length).to.be.above(0);",
+											"    ",
+											"    // Verify all returned RowIds are greater than lastRowId",
+											"    var lastRowId = parseInt(pm.environment.get(\"lastRowId\"));",
+											"    jsonData.data.forEach(item => {",
+											"        pm.expect(item.rowId).to.be.above(lastRowId);",
+											"    });",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/status/poll?sinceRowId={{lastRowId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"status",
+										"poll"
+									],
+									"query": [
+										{
+											"key": "sinceRowId",
+											"value": "{{lastRowId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Step 4: Poll Again (Should Return Empty)",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"No new data\", function () {",
+											"    var jsonData = pm.response.json();",
+											"    pm.expect(jsonData.data).to.be.an('array');",
+											"    pm.expect(jsonData.data.length).to.eql(0);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/api/sensor/status/poll?sinceRowId={{newRowId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"api",
+										"sensor",
+										"status",
+										"poll"
+									],
+									"query": [
+										{
+											"key": "sinceRowId",
+											"value": "{{newRowId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "Test del meccanismo di polling incrementale - verifica che solo i nuovi record vengano ritornati"
+				}
+			],
+			"description": "Scenari di test completi per validare il flusso end-to-end"
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5193",
+			"type": "string"
+		},
+		{
+			"key": "sensorId",
+			"value": "RASPBERRY-DEMO-001",
+			"type": "string"
+		},
+		{
+			"key": "statusId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "eventId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lastRowId",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "lastEventRowId",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "newRowId",
+			"value": "0",
+			"type": "string"
+		}
+	]
+}
