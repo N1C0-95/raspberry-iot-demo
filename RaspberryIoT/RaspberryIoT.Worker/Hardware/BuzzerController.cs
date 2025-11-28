@@ -8,19 +8,27 @@ public class BuzzerController : IDisposable
     private readonly ILogger<BuzzerController> _logger;
     private CancellationTokenSource? _melodyCts;
 
-    // Jingle Bells - Note e durate (frequenze in Hz)
+    // Jingle Bells - Melodia completa con note più accurate
     private static readonly int[] JingleBellsNotes = 
     { 
-        659, 659, 659,  // E E E
-        659, 659, 659,  // E E E
-        659, 784, 523, 587, 659  // E G C D E
+        659, 659, 659, 0,     // E E E (pausa)
+        659, 659, 659, 0,     // E E E (pausa)
+        659, 784, 523, 587, 659, 0,  // E G C D E (pausa)
+        698, 698, 698, 698,   // F F F F
+        698, 659, 659, 659,   // F E E E
+        659, 587, 587, 659,   // E D D E
+        587, 784, 0           // D G (pausa finale)
     };
 
     private static readonly int[] JingleBellsDurations = 
     { 
-        250, 250, 500,  // E E E (corta corta lunga)
-        250, 250, 500,  // E E E
-        250, 250, 250, 250, 1000  // E G C D E (finale lungo)
+        200, 200, 400, 100,   // E E E (pausa)
+        200, 200, 400, 100,   // E E E (pausa)
+        200, 200, 200, 200, 400, 200,  // E G C D E (pausa)
+        200, 200, 200, 200,   // F F F F
+        200, 200, 200, 100,   // F E E E
+        200, 200, 200, 200,   // E D D E
+        400, 400, 300         // D G (pausa finale)
     };
 
     public BuzzerController(GpioController gpio, ILogger<BuzzerController> logger)
@@ -61,28 +69,54 @@ public class BuzzerController : IDisposable
         {
             for (int i = 0; i < JingleBellsNotes.Length && !cancellationToken.IsCancellationRequested; i++)
             {
-                await PlayToneAsync(JingleBellsNotes[i], JingleBellsDurations[i], cancellationToken);
-                await Task.Delay(50, cancellationToken); // Pausa tra note
+                if (JingleBellsNotes[i] == 0)
+                {
+                    // Pausa (silenzio)
+                    await Task.Delay(JingleBellsDurations[i], cancellationToken);
+                }
+                else
+                {
+                    PlayToneBlocking(JingleBellsNotes[i], JingleBellsDurations[i]);
+                }
+                
+                if (cancellationToken.IsCancellationRequested) break;
             }
 
             // Pausa tra ripetizioni melodia
-            await Task.Delay(1000, cancellationToken);
+            await Task.Delay(2000, cancellationToken);
         }
     }
 
-    private async Task PlayToneAsync(int frequency, int durationMs, CancellationToken cancellationToken)
+    private void PlayToneBlocking(int frequency, int durationMs)
     {
-        var period = 1000000 / frequency; // Periodo in microsecondi
-        var halfPeriod = period / 2;
-        var cycles = (durationMs * 1000) / period;
+        if (frequency <= 0) return;
+        
+        var periodMicros = 1_000_000.0 / frequency;
+        var halfPeriodMicros = periodMicros / 2.0;
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var targetTicks = durationMs * TimeSpan.TicksPerMillisecond;
 
-        for (int i = 0; i < cycles && !cancellationToken.IsCancellationRequested; i++)
+        while (stopwatch.ElapsedTicks < targetTicks)
         {
             _gpio.Write(GpioPins.Buzzer, PinValue.High);
-            await Task.Delay(TimeSpan.FromMicroseconds(halfPeriod), cancellationToken);
+            SpinWaitMicroseconds(halfPeriodMicros);
             
             _gpio.Write(GpioPins.Buzzer, PinValue.Low);
-            await Task.Delay(TimeSpan.FromMicroseconds(halfPeriod), cancellationToken);
+            SpinWaitMicroseconds(halfPeriodMicros);
+        }
+        
+        _gpio.Write(GpioPins.Buzzer, PinValue.Low);
+    }
+
+    private static void SpinWaitMicroseconds(double microseconds)
+    {
+        var targetTicks = (long)(microseconds * TimeSpan.TicksPerMillisecond / 1000.0);
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        
+        while (stopwatch.ElapsedTicks < targetTicks)
+        {
+            // Spin-wait attivo per timing preciso
+            Thread.SpinWait(10);
         }
     }
 
