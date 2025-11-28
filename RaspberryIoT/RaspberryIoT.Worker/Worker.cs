@@ -38,9 +38,9 @@ public class Worker : BackgroundService
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var sensorId = _configuration.GetValue<string>("Worker:SensorId") ?? "RASPBERRY-DEMO-001";
-        var pollingInterval = _configuration.GetValue<int>("Worker:PollingIntervalMs", 1000); // Check button ogni 1 secondo
+        var pollingInterval = _configuration.GetValue<int>("Worker:PollingIntervalMs", 100); // Check button ogni 100ms (10x al secondo)
 
-        _logger.LogInformation("Christmas Worker started - SensorId: {SensorId}", sensorId);
+        _logger.LogInformation("🎄 Christmas Worker started - SensorId: {SensorId}", sensorId);
         
         // Avvia la melodia natalizia
         _buzzerController.StartMelody();
@@ -50,7 +50,7 @@ public class Worker : BackgroundService
         {
             try
             {
-                // Monitora il pulsante
+                // Monitora il pulsante (polling veloce per reattività)
                 _buttonMonitor.CheckState();
                 
                 // TODO: Qui in futuro controlleremo il DB per comandi di reboot dall'API
