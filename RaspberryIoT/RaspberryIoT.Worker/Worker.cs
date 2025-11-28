@@ -9,7 +9,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly ISensorOrchestrator _orchestrator;
     private readonly IConfiguration _configuration;
-    private readonly LedController _ledController;
+    private readonly RgbLedController _rgbLedController;
     private readonly BuzzerController _buzzerController;
     private readonly ButtonMonitor _buttonMonitor;
     
@@ -20,14 +20,14 @@ public class Worker : BackgroundService
         ILogger<Worker> logger,
         ISensorOrchestrator orchestrator,
         IConfiguration configuration,
-        LedController ledController,
+        RgbLedController rgbLedController,
         BuzzerController buzzerController,
         ButtonMonitor buttonMonitor)
     {
         _logger = logger;
         _orchestrator = orchestrator;
         _configuration = configuration;
-        _ledController = ledController;
+        _rgbLedController = rgbLedController;
         _buzzerController = buzzerController;
         _buttonMonitor = buttonMonitor;
         
@@ -37,20 +37,19 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var sensorId = _configuration.GetValue<string>("Worker:SensorId") ?? "RASPBERRY-DEMO-001";
         var pollingInterval = _configuration.GetValue<int>("Worker:PollingIntervalMs", 100); // Check button ogni 100ms (10x al secondo)
 
-        _logger.LogInformation("🎄 Christmas Worker started - SensorId: {SensorId}", sensorId);
+        _logger.LogInformation("🎄 Christmas Worker started with multi-sensor support");
         
-        // Avvia la melodia natalizia
+        // Avvia la melodia natalizia e LED verde (tutto OK)
         _buzzerController.StartMelody();
-        _ledController.SetNormalState();
+        _rgbLedController.SetGreen();
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                // Monitora il pulsante (polling veloce per reattività)
+                // Monitora i pulsanti (polling veloce per reattività)
                 _buttonMonitor.CheckState();
                 
                 // TODO: Qui in futuro controlleremo il DB per comandi di reboot dall'API
@@ -67,7 +66,7 @@ public class Worker : BackgroundService
         
         // Cleanup quando il worker si ferma
         _buzzerController.Stop();
-        _ledController.TurnOffAll();
+        _rgbLedController.TurnOff();
     }
 
     private async void OnButtonPressed(object? sender, EventArgs e)
@@ -78,22 +77,30 @@ public class Worker : BackgroundService
             return;
         }
 
+        // Cast EventArgs to ButtonPressedEventArgs
+        if (e is not ButtonPressedEventArgs buttonEventArgs)
+        {
+            _logger.LogError("Invalid event args type");
+            return;
+        }
+
         _isInErrorState = true;
         
         try
         {
-            var sensorId = _configuration.GetValue<string>("Worker:SensorId") ?? "RASPBERRY-DEMO-001";
+            var sensorId = buttonEventArgs.SensorId;
             
-            _logger.LogError(" ERROR DETECTED! Stopping melody and activating red LED");
+            _logger.LogError("⚠️ ERROR DETECTED! Sensor: {SensorId}, Button Pin: {ButtonPin}", 
+                sensorId, buttonEventArgs.ButtonPin);
             
-            // Stop melodia e attiva LED rosso
+            // Stop melodia e attiva LED specifico per sensore
             _buzzerController.Stop();
-            _ledController.SetErrorState();
+            _rgbLedController.SetColorForSensor(sensorId);
             
             // Scrivi nel DB tramite orchestrator
             await _orchestrator.HandleErrorDetectedAsync(sensorId, "button_press", CancellationToken.None);
             
-            _logger.LogInformation("Error status and event saved to database");
+            _logger.LogInformation("Error status and event saved to database for sensor {SensorId}", sensorId);
             _logger.LogWarning("System in error state - waiting for API reboot command...");
         }
         catch (Exception ex)
