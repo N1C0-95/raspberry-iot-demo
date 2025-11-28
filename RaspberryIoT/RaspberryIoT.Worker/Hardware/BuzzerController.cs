@@ -2,33 +2,33 @@ using System.Device.Gpio;
 
 namespace RaspberryIoT.Worker.Hardware;
 
+/// <summary>
+/// Controller for Active Buzzer (simple ON/OFF, no frequency control)
+/// Pattern: Christmas rhythm beeps
+/// </summary>
 public class BuzzerController : IDisposable
 {
     private readonly GpioController _gpio;
     private readonly ILogger<BuzzerController> _logger;
     private CancellationTokenSource? _melodyCts;
 
-    // Jingle Bells - Melodia completa con note più accurate
-    private static readonly int[] JingleBellsNotes = 
+    // Jingle Bells Rhythm Pattern (ON/OFF durations in milliseconds)
+    // Pattern simula il ritmo di "Jingle Bells" con beep semplici
+    private static readonly int[] BeepPattern = 
     { 
-        659, 659, 659, 0,     // E E E (pausa)
-        659, 659, 659, 0,     // E E E (pausa)
-        659, 784, 523, 587, 659, 0,  // E G C D E (pausa)
-        698, 698, 698, 698,   // F F F F
-        698, 659, 659, 659,   // F E E E
-        659, 587, 587, 659,   // E D D E
-        587, 784, 0           // D G (pausa finale)
-    };
-
-    private static readonly int[] JingleBellsDurations = 
-    { 
-        200, 200, 400, 100,   // E E E (pausa)
-        200, 200, 400, 100,   // E E E (pausa)
-        200, 200, 200, 200, 400, 200,  // E G C D E (pausa)
-        200, 200, 200, 200,   // F F F F
-        200, 200, 200, 100,   // F E E E
-        200, 200, 200, 200,   // E D D E
-        400, 400, 300         // D G (pausa finale)
+        150, 100,  // Beep corto, pausa corta (E)
+        150, 100,  // Beep corto, pausa corta (E)
+        300, 200,  // Beep lungo, pausa media (E - lunga)
+        
+        150, 100,  // Beep corto, pausa corta (E)
+        150, 100,  // Beep corto, pausa corta (E)
+        300, 200,  // Beep lungo, pausa media (E - lunga)
+        
+        150, 100,  // E
+        150, 100,  // G
+        150, 100,  // C
+        150, 100,  // D
+        400, 500   // E - finale lungo con pausa
     };
 
     public BuzzerController(GpioController gpio, ILogger<BuzzerController> logger)
@@ -42,7 +42,7 @@ public class BuzzerController : IDisposable
     {
         _gpio.OpenPin(GpioPins.Buzzer, PinMode.Output);
         _gpio.Write(GpioPins.Buzzer, PinValue.Low);
-        _logger.LogInformation("Buzzer Controller initialized");
+        _logger.LogInformation("🔊 Active Buzzer Controller initialized");
     }
 
     public void StartMelody()
@@ -50,8 +50,8 @@ public class BuzzerController : IDisposable
         Stop();
         _melodyCts = new CancellationTokenSource();
         
-        Task.Run(async () => await PlayMelodyLoopAsync(_melodyCts.Token), _melodyCts.Token);
-        _logger.LogInformation("🎵 Jingle Bells melody started");
+        Task.Run(async () => await PlayPatternLoopAsync(_melodyCts.Token), _melodyCts.Token);
+        _logger.LogInformation("🎵 Christmas beep pattern started");
     }
 
     public void Stop()
@@ -60,64 +60,43 @@ public class BuzzerController : IDisposable
         _melodyCts?.Dispose();
         _melodyCts = null;
         _gpio.Write(GpioPins.Buzzer, PinValue.Low);
-        _logger.LogInformation("🔇 Melody stopped");
+        _logger.LogInformation("🔇 Buzzer stopped");
     }
 
-    private async Task PlayMelodyLoopAsync(CancellationToken cancellationToken)
+    private async Task PlayPatternLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            for (int i = 0; i < JingleBellsNotes.Length && !cancellationToken.IsCancellationRequested; i++)
+            // Suona il pattern ritmico
+            for (int i = 0; i < BeepPattern.Length - 1 && !cancellationToken.IsCancellationRequested; i += 2)
             {
-                if (JingleBellsNotes[i] == 0)
-                {
-                    // Pausa (silenzio)
-                    await Task.Delay(JingleBellsDurations[i], cancellationToken);
-                }
-                else
-                {
-                    PlayToneBlocking(JingleBellsNotes[i], JingleBellsDurations[i]);
-                }
+                // Beep ON
+                _gpio.Write(GpioPins.Buzzer, PinValue.High);
+                await Task.Delay(BeepPattern[i], cancellationToken);
                 
-                if (cancellationToken.IsCancellationRequested) break;
+                // Beep OFF (pausa)
+                _gpio.Write(GpioPins.Buzzer, PinValue.Low);
+                await Task.Delay(BeepPattern[i + 1], cancellationToken);
             }
 
-            // Pausa tra ripetizioni melodia
+            // Pausa tra ripetizioni del pattern
             await Task.Delay(2000, cancellationToken);
         }
     }
 
-    private void PlayToneBlocking(int frequency, int durationMs)
+    /// <summary>
+    /// Suona 3 beep rapidi per indicare reboot/recovery
+    /// </summary>
+    public async Task PlayRebootBeepsAsync()
     {
-        if (frequency <= 0) return;
-        
-        var periodMicros = 1_000_000.0 / frequency;
-        var halfPeriodMicros = periodMicros / 2.0;
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        var targetTicks = durationMs * TimeSpan.TicksPerMillisecond;
-
-        while (stopwatch.ElapsedTicks < targetTicks)
+        for (int i = 0; i < 3; i++)
         {
             _gpio.Write(GpioPins.Buzzer, PinValue.High);
-            SpinWaitMicroseconds(halfPeriodMicros);
-            
+            await Task.Delay(100);
             _gpio.Write(GpioPins.Buzzer, PinValue.Low);
-            SpinWaitMicroseconds(halfPeriodMicros);
+            await Task.Delay(100);
         }
-        
-        _gpio.Write(GpioPins.Buzzer, PinValue.Low);
-    }
-
-    private static void SpinWaitMicroseconds(double microseconds)
-    {
-        var targetTicks = (long)(microseconds * TimeSpan.TicksPerMillisecond / 1000.0);
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
-        
-        while (stopwatch.ElapsedTicks < targetTicks)
-        {
-            // Spin-wait attivo per timing preciso
-            Thread.SpinWait(10);
-        }
+        _logger.LogInformation("🔔 Reboot beeps completed");
     }
 
     public void Dispose()
