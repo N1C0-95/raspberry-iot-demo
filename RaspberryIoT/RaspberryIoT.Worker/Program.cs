@@ -24,8 +24,10 @@ builder.Services.AddSingleton<ISensorOrchestrator, SensorOrchestrator>();
 // GPIO Hardware Controllers
 builder.Services.AddSingleton<GpioController>();
 builder.Services.AddSingleton<LedController>();
-builder.Services.AddSingleton<BuzzerController>();
 builder.Services.AddSingleton<ButtonMonitor>();
+
+// Audio Controller (replaces GPIO Buzzer)
+builder.Services.AddSingleton<BuzzerController>();
 
 // Worker Service
 builder.Services.AddHostedService<Worker>();
