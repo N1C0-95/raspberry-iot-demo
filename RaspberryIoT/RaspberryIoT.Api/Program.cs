@@ -29,9 +29,8 @@ builder.Services.AddSingleton<ISensorOrchestrator, SensorOrchestrator>();
 
 var app = builder.Build();
 
-// Initialize Database
-var dbInitializer = app.Services.GetRequiredService<IDbInitializer>();
-await dbInitializer.InitializeAsync();
+// Database initialization is handled by Worker Service
+// API only reads/writes to the existing database
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
