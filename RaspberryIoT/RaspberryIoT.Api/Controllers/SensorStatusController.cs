@@ -53,7 +53,7 @@ public class SensorStatusController : ControllerBase
     }
 
     [HttpGet(ApiRoutes.SensorStatus.Poll)]
-    public async Task<IActionResult> Poll([FromQuery] int sinceRowId = 0, CancellationToken token = default)
+    public async Task<IActionResult> Poll([FromQuery] int sinceRowId = 0, [FromQuery] string id = null, CancellationToken token = default)
     {
         var response = await _sensorStatusService.GetNewStatusesSinceRowIdAsync(sinceRowId, token);
         return Ok(response);
