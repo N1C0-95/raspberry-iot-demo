@@ -23,7 +23,7 @@ public static class ApiRoutes
         
         public const string GetAll = SensorEventsBase;
         public const string GetById = $"{SensorEventsBase}/{{id}}";
-        public const string Poll = $"{SensorEventsBase}/poll";
+        public const string Poll = $"trigger/{SensorEventsBase}/poll";
         public const string Create = SensorEventsBase;
     }
 }
