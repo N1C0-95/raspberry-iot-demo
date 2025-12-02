@@ -138,7 +138,7 @@ public class Worker : BackgroundService
         {
             var apiBaseUrl = _configuration.GetValue<string>("Worker:ApiBaseUrl", "http://localhost:5000");
             var response = await _httpClient.GetAsync(
-                $"{apiBaseUrl}/api/sensor-status/{_currentErrorSensorId}/current",
+                $"{apiBaseUrl}/api/sensor/status/current/{_currentErrorSensorId}",
                 token
             );
 

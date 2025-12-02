@@ -9,10 +9,14 @@ namespace RaspberryIoT.Api.Controllers;
 public class SensorStatusController : ControllerBase
 {
     private readonly ISensorStatusService _sensorStatusService;
+    private readonly ISensorOrchestrator _orchestrator;
 
-    public SensorStatusController(ISensorStatusService sensorStatusService)
+    public SensorStatusController(
+        ISensorStatusService sensorStatusService,
+        ISensorOrchestrator orchestrator)
     {
         _sensorStatusService = sensorStatusService;
+        _orchestrator = orchestrator;
     }
 
     [HttpGet(ApiRoutes.SensorStatus.GetAll)]
@@ -71,14 +75,20 @@ public class SensorStatusController : ControllerBase
     [HttpPost(ApiRoutes.SensorStatus.ForceError)]
     public async Task<IActionResult> ForceError([FromBody] ForceErrorRequest request, CancellationToken token)
     {
-        var status = await _sensorStatusService.ForceErrorAsync(request, token);
-        return CreatedAtAction(nameof(GetById), new { id = status.Id }, status);
+        await _orchestrator.HandleErrorDetectedAsync(request.SensorId, request.TriggeredBy, token);
+        
+        // Recupera lo status appena creato per la risposta
+        var status = await _sensorStatusService.GetCurrentBySensorIdAsync(request.SensorId, token);
+        return CreatedAtAction(nameof(GetById), new { id = status!.Id }, status);
     }
 
     [HttpPost(ApiRoutes.SensorStatus.ForceReboot)]
     public async Task<IActionResult> ForceReboot([FromBody] ForceRebootRequest request, CancellationToken token)
     {
-        var status = await _sensorStatusService.ForceRebootAsync(request, token);
-        return CreatedAtAction(nameof(GetById), new { id = status.Id }, status);
+        await _orchestrator.HandleRebootStartedAsync(request.SensorId, request.TriggeredBy, token);
+        
+        // Recupera lo status appena creato per la risposta
+        var status = await _sensorStatusService.GetCurrentBySensorIdAsync(request.SensorId, token);
+        return CreatedAtAction(nameof(GetById), new { id = status!.Id }, status);
     }
 }
