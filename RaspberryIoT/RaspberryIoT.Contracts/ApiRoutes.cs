@@ -11,7 +11,7 @@ public static class ApiRoutes
         public const string GetAll = SensorStatusBase;
         public const string GetById = $"{SensorStatusBase}/{{id}}";
         public const string GetCurrent = $"{SensorStatusBase}/current/{{sensorId}}";
-        public const string Poll = $"{Base}/trigger/sensor/status/poll";
+        public const string Poll = $"sensor/status/poll";
         public const string Update = $"{SensorStatusBase}/{{id}}";
         public const string ForceError = $"{Base}/sensor/error";
         public const string ForceReboot = $"{Base}/sensor/reboot";
