@@ -6,4 +6,5 @@ public interface ISensorOrchestrator
 {
     Task HandleErrorDetectedAsync(string sensorId, string triggeredBy, CancellationToken token = default);
     Task HandleRebootStartedAsync(string sensorId, string triggeredBy, CancellationToken token = default);
+    Task HandleRebootCompletedAsync(string sensorId, string triggeredBy, CancellationToken token = default);
 }

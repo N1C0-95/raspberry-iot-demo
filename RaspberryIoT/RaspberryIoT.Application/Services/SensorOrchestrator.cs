@@ -81,4 +81,37 @@ public class SensorOrchestrator : ISensorOrchestrator
 
         await _eventRepository.CreateAsync(sensorEvent, token);
     }
+
+    public async Task HandleRebootCompletedAsync(string sensorId, string triggeredBy, CancellationToken token = default)
+    {
+        var now = DateTime.UtcNow;
+
+        // 1. Crea il nuovo status (Online)
+        var status = new SensorStatus
+        {
+            Id = Guid.NewGuid(),
+            SensorId = sensorId,
+            Status = SensorStatusEnum.Online,
+            LedColor = LedColor.Green,
+            ChangedOn = triggeredBy,
+            Timestamp = now,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        await _statusRepository.CreateAsync(status, token);
+
+        // 2. Crea l'evento correlato
+        var sensorEvent = new SensorEvent
+        {
+            Id = Guid.NewGuid(),
+            EventType = EventType.RebootCompleted,
+            Status = SensorStatusEnum.Online.ToString(),
+            TriggeredBy = triggeredBy,
+            Timestamp = now,
+            CreatedAt = now
+        };
+
+        await _eventRepository.CreateAsync(sensorEvent, token);
+    }
 }

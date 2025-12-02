@@ -15,5 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="..\RaspberryIoT.Application\RaspberryIoT.Application.csproj" />
     <ProjectReference Include="..\RaspberryIoT.Infrastructure\RaspberryIoT.Infrastructure.csproj" />
+    <ProjectReference Include="..\RaspberryIoT.Contracts\RaspberryIoT.Contracts.csproj" />
   </ItemGroup>
 </Project>

@@ -1,6 +1,8 @@
 using RaspberryIoT.Application.Models;
 using RaspberryIoT.Application.Services;
 using RaspberryIoT.Worker.Hardware;
+using System.Net.Http.Json;
+using RaspberryIoT.Contracts.Responses;
 
 namespace RaspberryIoT.Worker;
 
@@ -12,9 +14,13 @@ public class Worker : BackgroundService
     private readonly RgbLedController _rgbLedController;
     private readonly BuzzerController _buzzerController;
     private readonly ButtonMonitor _buttonMonitor;
+    private readonly HttpClient _httpClient;
     
     private bool _isInErrorState = false;
     private bool _isInRebootState = false;
+    private string? _currentErrorSensorId = null;
+    private SensorStatusEnum? _lastKnownStatus = null;
+    private DateTime _lastStatusCheck = DateTime.MinValue;
 
     public Worker(
         ILogger<Worker> logger,
@@ -30,6 +36,7 @@ public class Worker : BackgroundService
         _rgbLedController = rgbLedController;
         _buzzerController = buzzerController;
         _buttonMonitor = buttonMonitor;
+        _httpClient = new HttpClient();
         
         // Registra evento pressione pulsante
         _buttonMonitor.ButtonPressed += OnButtonPressed;
@@ -37,9 +44,10 @@ public class Worker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        var pollingInterval = _configuration.GetValue<int>("Worker:PollingIntervalMs", 100); // Check button ogni 100ms (10x al secondo)
+        var pollingInterval = _configuration.GetValue<int>("Worker:PollingIntervalMs", 100);
+        var statusCheckInterval = _configuration.GetValue<int>("Worker:StatusCheckIntervalMs", 2000);
 
-        _logger.LogInformation("🎄 Christmas Worker started with multi-sensor support");
+        _logger.LogInformation("Christmas Worker started with multi-sensor support");
         
         // Avvia la melodia natalizia e LED verde (tutto OK)
         _buzzerController.StartMelody();
@@ -52,8 +60,13 @@ public class Worker : BackgroundService
                 // Monitora i pulsanti (polling veloce per reattività)
                 _buttonMonitor.CheckState();
                 
-                // TODO: Qui in futuro controlleremo il DB per comandi di reboot dall'API
-                // if (CheckForRebootCommand()) { HandleReboot(); }
+                // Controlla lo status API solo se in errore e ogni X secondi
+                if (_isInErrorState && !_isInRebootState &&
+                    (DateTime.UtcNow - _lastStatusCheck).TotalMilliseconds >= statusCheckInterval)
+                {
+                    await CheckForStatusChangeAsync(stoppingToken);
+                    _lastStatusCheck = DateTime.UtcNow;
+                }
 
                 await Task.Delay(pollingInterval, stoppingToken);
             }
@@ -85,6 +98,8 @@ public class Worker : BackgroundService
         }
 
         _isInErrorState = true;
+        _currentErrorSensorId = buttonEventArgs.SensorId;
+        _lastKnownStatus = SensorStatusEnum.Error;
         
         try
         {
@@ -107,12 +122,97 @@ public class Worker : BackgroundService
         {
             _logger.LogError(ex, "Failed to handle button press");
             _isInErrorState = false; // Reset per permettere retry
+            _currentErrorSensorId = null;
+            _lastKnownStatus = null;
+        }
+    }
+
+    private async Task CheckForStatusChangeAsync(CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(_currentErrorSensorId))
+        {
+            return;
+        }
+
+        try
+        {
+            var apiBaseUrl = _configuration.GetValue<string>("Worker:ApiBaseUrl", "http://localhost:5000");
+            var response = await _httpClient.GetAsync(
+                $"{apiBaseUrl}/api/sensor-status/{_currentErrorSensorId}/current",
+                token
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning("Failed to check status from API: {StatusCode}", response.StatusCode);
+                return;
+            }
+
+            var statusResponse = await response.Content.ReadFromJsonAsync<SensorStatusResponse>(cancellationToken: token);
+            
+            if (statusResponse == null)
+            {
+                _logger.LogWarning("Received null status response from API");
+                return;
+            }
+
+            var currentStatus = Enum.Parse<SensorStatusEnum>(statusResponse.Status);
+
+            // Rileva transizione Error → Rebooting (comando reboot arrivato!)
+            if (_lastKnownStatus == SensorStatusEnum.Error &&
+                currentStatus == SensorStatusEnum.Rebooting)
+            {
+                _logger.LogInformation("🔄 Reboot command detected from API for sensor {SensorId}", _currentErrorSensorId);
+                await HandleRebootAsync(token);
+            }
+
+            _lastKnownStatus = currentStatus;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check status from API");
+        }
+    }
+
+    private async Task HandleRebootAsync(CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(_currentErrorSensorId))
+        {
+            return;
+        }
+
+        try
+        {
+            _logger.LogInformation("🔄 Starting reboot process for sensor {SensorId}", _currentErrorSensorId);
+
+            _isInRebootState = true;
+
+            // Reboot completato → Scrivi Online nel DB
+            await _orchestrator.HandleRebootCompletedAsync(_currentErrorSensorId, "worker_auto", token);
+
+            // Ripristina stato normale
+            _rgbLedController.SetGreen();
+            _buzzerController.StartMelody();
+
+            _isInErrorState = false;
+            _isInRebootState = false;
+            _lastKnownStatus = SensorStatusEnum.Online;
+            _currentErrorSensorId = null;
+
+            _logger.LogInformation("✅ System back online!");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to complete reboot process");
+            // In caso di errore, reset flags per permettere retry
+            _isInRebootState = false;
         }
     }
 
     public override void Dispose()
     {
         _buttonMonitor.ButtonPressed -= OnButtonPressed;
+        _httpClient?.Dispose();
         base.Dispose();
     }
 }
